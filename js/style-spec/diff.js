@@ -1,6 +1,6 @@
 'use strict';
 
-const isEqual = require('lodash.isequal');
+const deepEqual = require('../util/util').deepEqual;
 
 const operations = {
 
@@ -117,7 +117,7 @@ function diffSources(before, after, commands, sourcesRemoved) {
         if (!after.hasOwnProperty(sourceId)) continue;
         if (!before.hasOwnProperty(sourceId)) {
             commands.push({ command: operations.addSource, args: [sourceId, after[sourceId]] });
-        } else if (!isEqual(before[sourceId], after[sourceId])) {
+        } else if (!deepEqual(before[sourceId], after[sourceId])) {
             // no update command, must remove then add
             commands.push({ command: operations.removeSource, args: [sourceId] });
             commands.push({ command: operations.addSource, args: [sourceId, after[sourceId]] });
@@ -134,13 +134,13 @@ function diffLayerPropertyChanges(before, after, commands, layerId, klass, comma
 
     for (prop in before) {
         if (!before.hasOwnProperty(prop)) continue;
-        if (!isEqual(before[prop], after[prop])) {
+        if (!deepEqual(before[prop], after[prop])) {
             commands.push({ command: command, args: [layerId, prop, after[prop], klass] });
         }
     }
     for (prop in after) {
         if (!after.hasOwnProperty(prop) || before.hasOwnProperty(prop)) continue;
-        if (!isEqual(before[prop], after[prop])) {
+        if (!deepEqual(before[prop], after[prop])) {
             commands.push({ command: command, args: [layerId, prop, after[prop], klass] });
         }
     }
@@ -216,11 +216,11 @@ function diffLayers(before, after, commands) {
         afterLayer = afterIndex[layerId];
 
         // no need to update if previously added (new or moved)
-        if (clean[layerId] || isEqual(beforeLayer, afterLayer)) continue;
+        if (clean[layerId] || deepEqual(beforeLayer, afterLayer)) continue;
 
         // If source, source-layer, or type have changes, then remove the layer
         // and add it back 'from scratch'.
-        if (!isEqual(beforeLayer.source, afterLayer.source) || !isEqual(beforeLayer['source-layer'], afterLayer['source-layer']) || !isEqual(beforeLayer.type, afterLayer.type)) {
+        if (!deepEqual(beforeLayer.source, afterLayer.source) || !deepEqual(beforeLayer['source-layer'], afterLayer['source-layer']) || !deepEqual(beforeLayer.type, afterLayer.type)) {
             commands.push({ command: operations.removeLayer, args: [layerId] });
             // we add the layer back at the same position it was already in, so
             // there's no need to update the `tracker`
@@ -232,10 +232,10 @@ function diffLayers(before, after, commands) {
         // layout, paint, filter, minzoom, maxzoom
         diffLayerPropertyChanges(beforeLayer.layout, afterLayer.layout, commands, layerId, null, operations.setLayoutProperty);
         diffLayerPropertyChanges(beforeLayer.paint, afterLayer.paint, commands, layerId, null, operations.setPaintProperty);
-        if (!isEqual(beforeLayer.filter, afterLayer.filter)) {
+        if (!deepEqual(beforeLayer.filter, afterLayer.filter)) {
             commands.push({ command: operations.setFilter, args: [layerId, afterLayer.filter] });
         }
-        if (!isEqual(beforeLayer.minzoom, afterLayer.minzoom) || !isEqual(beforeLayer.maxzoom, afterLayer.maxzoom)) {
+        if (!deepEqual(beforeLayer.minzoom, afterLayer.minzoom) || !deepEqual(beforeLayer.maxzoom, afterLayer.maxzoom)) {
             commands.push({ command: operations.setLayerZoomRange, args: [layerId, afterLayer.minzoom, afterLayer.maxzoom] });
         }
 
@@ -246,7 +246,7 @@ function diffLayers(before, after, commands) {
                 prop === 'metadata' || prop === 'minzoom' || prop === 'maxzoom') continue;
             if (prop.indexOf('paint.') === 0) {
                 diffLayerPropertyChanges(beforeLayer[prop], afterLayer[prop], commands, layerId, prop.slice(6), operations.setPaintProperty);
-            } else if (!isEqual(beforeLayer[prop], afterLayer[prop])) {
+            } else if (!deepEqual(beforeLayer[prop], afterLayer[prop])) {
                 commands.push({ command: operations.setLayerProperty, args: [layerId, prop, afterLayer[prop]] });
             }
         }
@@ -256,7 +256,7 @@ function diffLayers(before, after, commands) {
                 prop === 'metadata' || prop === 'minzoom' || prop === 'maxzoom') continue;
             if (prop.indexOf('paint.') === 0) {
                 diffLayerPropertyChanges(beforeLayer[prop], afterLayer[prop], commands, layerId, prop.slice(6), operations.setPaintProperty);
-            } else if (!isEqual(beforeLayer[prop], afterLayer[prop])) {
+            } else if (!deepEqual(beforeLayer[prop], afterLayer[prop])) {
                 commands.push({ command: operations.setLayerProperty, args: [layerId, prop, afterLayer[prop]] });
             }
         }
@@ -287,31 +287,31 @@ function diffStyles(before, after) {
 
     try {
         // Handle changes to top-level properties
-        if (!isEqual(before.version, after.version)) {
+        if (!deepEqual(before.version, after.version)) {
             return [{ command: operations.setStyle, args: [after] }];
         }
-        if (!isEqual(before.center, after.center)) {
+        if (!deepEqual(before.center, after.center)) {
             commands.push({ command: operations.setCenter, args: [after.center] });
         }
-        if (!isEqual(before.zoom, after.zoom)) {
+        if (!deepEqual(before.zoom, after.zoom)) {
             commands.push({ command: operations.setZoom, args: [after.zoom] });
         }
-        if (!isEqual(before.bearing, after.bearing)) {
+        if (!deepEqual(before.bearing, after.bearing)) {
             commands.push({ command: operations.setBearing, args: [after.bearing] });
         }
-        if (!isEqual(before.pitch, after.pitch)) {
+        if (!deepEqual(before.pitch, after.pitch)) {
             commands.push({ command: operations.setPitch, args: [after.pitch] });
         }
-        if (!isEqual(before.sprite, after.sprite)) {
+        if (!deepEqual(before.sprite, after.sprite)) {
             commands.push({ command: operations.setSprite, args: [after.sprite] });
         }
-        if (!isEqual(before.glyphs, after.glyphs)) {
+        if (!deepEqual(before.glyphs, after.glyphs)) {
             commands.push({ command: operations.setGlyphs, args: [after.glyphs] });
         }
-        if (!isEqual(before.transition, after.transition)) {
+        if (!deepEqual(before.transition, after.transition)) {
             commands.push({ command: operations.setTransition, args: [after.transition] });
         }
-        if (!isEqual(before.light, after.light)) {
+        if (!deepEqual(before.light, after.light)) {
             commands.push({ command: operations.setLight, args: [after.light] });
         }
 
